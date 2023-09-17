@@ -32,8 +32,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <cs/Text/PrintUtil.h>
+
 int main(int argc, char **argv)
 {
-  printf("The Matrix has you...\n");
+  cs::println("csUtil: The Matrix has you...");
   return EXIT_SUCCESS;
 }
