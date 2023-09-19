@@ -45,9 +45,10 @@
 ////// Util //////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline T readIntegral(const void *data)
+inline T readInt(const cs::byte_t *data, const std::size_t offset,
+                 const std::size_t displacement = 0)
 {
-  return cs::toIntegralFromLE<T>(data, sizeof(T));
+  return cs::toIntegralFromLE<T>(data + offset + displacement * sizeof(T), sizeof(T));
 }
 
 inline std::string formatTime(const std::time_t t)
@@ -77,6 +78,7 @@ inline bool hasFourCC_nc(const cs::Buffer& buffer, const std::size_t offset,
 ////// Table of Contents /////////////////////////////////////////////////////
 
 struct Toc {
+  using timestamp_t  = uint32_t;
   using id_stream_t  = uint32_t;
   using id_camera_t  = uint32_t;
   using num_blocks_t = uint32_t;
@@ -91,6 +93,9 @@ struct Toc {
   std::array<id_camera_t, NUM_STREAMS> id_camera;
   std::array<num_blocks_t, NUM_STREAMS> num_blocks;
   std::array<siz_stream_t, NUM_STREAMS> siz_stream;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_begin;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_end1;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_end2;
 
   Toc() noexcept
   {
@@ -101,12 +106,15 @@ struct Toc {
     constexpr FourCC TAG_BEGIN = FourCC{'l', 'u', 'o', ' '};
     constexpr FourCC TAG_END   = FourCC{' ', 'o', 'u', 'l'};
 
-    constexpr std::size_t OFFS_TIME_BEGIN = 0x4;
-    constexpr std::size_t OFFS_TIME_END   = 0x8;
-    constexpr std::size_t OFFS_ID_CAMERA  = 0x20c;
-    constexpr std::size_t OFFS_ID_STREAM  = 0x28C;
-    constexpr std::size_t OFFS_NUM_BLOCKS = 0x38C;
-    constexpr std::size_t OFFS_SIZ_STREAM = 0x40C;
+    constexpr std::size_t OFFS_TIME_BEGIN        = 0x4;
+    constexpr std::size_t OFFS_TIME_END          = 0x8;
+    constexpr std::size_t OFFS_TIME_STREAM_BEGIN = 0x08C;
+    constexpr std::size_t OFFS_TIME_STREAM_END1  = 0x18C;
+    constexpr std::size_t OFFS_ID_CAMERA         = 0x20C;
+    constexpr std::size_t OFFS_ID_STREAM         = 0x28C;
+    constexpr std::size_t OFFS_TIME_STREAM_END2  = 0x30C;
+    constexpr std::size_t OFFS_NUM_BLOCKS        = 0x38C;
+    constexpr std::size_t OFFS_SIZ_STREAM        = 0x40C;
 
     if( offset + SIZE_TOC > buffer.size() ) {
       return Toc{};
@@ -116,22 +124,29 @@ struct Toc {
       return Toc{};
     }
 
+    // Helper ////////////////////////////////////////////////////////////////
+
+    const cs::byte_t *data = buffer.data() + offset;
+
+    // Result ////////////////////////////////////////////////////////////////
+
     Toc toc;
 
     // Parse Time Stamps /////////////////////////////////////////////////////
 
-    toc.tim_begin = readIntegral<uint32_t>(buffer.data() + offset + OFFS_TIME_BEGIN);
-    toc.tim_end   = readIntegral<uint32_t>(buffer.data() + offset + OFFS_TIME_END);
+    toc.tim_begin = readInt<timestamp_t>(data, OFFS_TIME_BEGIN);
+    toc.tim_end   = readInt<timestamp_t>(data, OFFS_TIME_END);
 
     // Parse Streams /////////////////////////////////////////////////////////
 
     for( std::size_t i = 0; i < NUM_STREAMS; i++ ) {
-      const cs::byte_t *data = buffer.data() + offset;
-
-      toc.id_stream[i]  = readIntegral<id_stream_t>(data + OFFS_ID_STREAM + i * sizeof(id_stream_t));
-      toc.id_camera[i]  = readIntegral<id_camera_t>(data + OFFS_ID_CAMERA + i * sizeof(id_camera_t));
-      toc.num_blocks[i] = readIntegral<num_blocks_t>(data + OFFS_NUM_BLOCKS + i * sizeof(num_blocks_t));
-      toc.siz_stream[i] = readIntegral<siz_stream_t>(data + OFFS_SIZ_STREAM + i * sizeof(siz_stream_t));
+      toc.id_stream[i]        = readInt<id_stream_t>(data, OFFS_ID_STREAM, i);
+      toc.id_camera[i]        = readInt<id_camera_t>(data, OFFS_ID_CAMERA, i);
+      toc.num_blocks[i]       = readInt<num_blocks_t>(data, OFFS_NUM_BLOCKS, i);
+      toc.siz_stream[i]       = readInt<siz_stream_t>(data, OFFS_SIZ_STREAM, i);
+      toc.tim_stream_begin[i] = readInt<timestamp_t>(data, OFFS_TIME_STREAM_BEGIN, i);
+      toc.tim_stream_end1[i]  = readInt<timestamp_t>(data, OFFS_TIME_STREAM_END1, i);
+      toc.tim_stream_end2[i]  = readInt<timestamp_t>(data, OFFS_TIME_STREAM_END2, i);
     }
 
     return toc;
@@ -148,10 +163,13 @@ struct Toc {
         continue;
       }
 
-      cs::println(stream, "id_stream  = 0x%", cs::hexf(id_stream[i], true));
-      cs::println(stream, "id_camera  = %", id_camera[i]);
-      cs::println(stream, "num_blocks = %", num_blocks[i]);
-      cs::println(stream, "siz_stream = %", siz_stream[i]);
+      cs::println(stream, "id_stream        = 0x%", cs::hexf(id_stream[i], true));
+      cs::println(stream, "id_camera        = %", id_camera[i]);
+      cs::println(stream, "num_blocks       = %", num_blocks[i]);
+      cs::println(stream, "siz_stream       = %", siz_stream[i]);
+      cs::println(stream, "tim_stream_begin = %", formatTime(tim_stream_begin[i]));
+      cs::println(stream, "tim_stream_end1  = %", formatTime(tim_stream_end1[i]));
+      cs::println(stream, "tim_stream_end2  = %", formatTime(tim_stream_end2[i]));
       cs::println(stream, "");
     }
   }
@@ -167,7 +185,6 @@ int main(int argc, char **argv)
   }
 
   const cs::Buffer buffer = file.readAll();
-  cs::println("size = %", buffer.size());
 
   const Toc toc = Toc::parse(buffer);
   toc.print(&std::cout);
