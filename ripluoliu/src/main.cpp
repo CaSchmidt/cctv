@@ -101,7 +101,7 @@ struct Toc {
   {
   }
 
-  static Toc parse(const cs::Buffer& buffer, const std::size_t offset = 0)
+  static Toc read(const cs::Buffer& buffer, const std::size_t offset = 0)
   {
     constexpr FourCC TAG_BEGIN = FourCC{'l', 'u', 'o', ' '};
     constexpr FourCC TAG_END   = FourCC{' ', 'o', 'u', 'l'};
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
   const cs::Buffer buffer = file.readAll();
 
-  const Toc toc = Toc::parse(buffer);
+  const Toc toc = Toc::read(buffer);
   toc.print(&std::cout);
 
   return EXIT_SUCCESS;
