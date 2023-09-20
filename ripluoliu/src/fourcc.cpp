@@ -29,41 +29,24 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <iostream>
-
-#include <cs/IO/File.h>
-
 #include "fourcc.h"
-#include "toc.h"
-#include "util.h"
 
-////// Block /////////////////////////////////////////////////////////////////
-
-struct Block {
-
-  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
-
-  Block() noexcept
-  {
-  }
-};
-
-////// Main //////////////////////////////////////////////////////////////////
-
-int main(int argc, char **argv)
+FourCC getFourCC_nc(const cs::Buffer& buffer, const std::size_t offset)
 {
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
+  return FourCC{
+    static_cast<char>(buffer[offset + 0]),
+    static_cast<char>(buffer[offset + 1]),
+    static_cast<char>(buffer[offset + 2]),
+    static_cast<char>(buffer[offset + 3])};
+}
 
-  const cs::Buffer buffer = file.readAll();
+bool hasFourCC_nc(const cs::Buffer& buffer, const std::size_t offset,
+                  const FourCC& fourcc)
+{
+  return std::equal(fourcc.begin(), fourcc.end(), buffer.data() + offset);
+}
 
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
-
-  return EXIT_SUCCESS;
+std::string_view toStringView(const FourCC& fourcc)
+{
+  return std::string_view{fourcc.data(), fourcc.size()};
 }

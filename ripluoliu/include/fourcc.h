@@ -29,41 +29,20 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#pragma once
 
-#include <iostream>
+#include <array>
+#include <string>
 
-#include <cs/IO/File.h>
+#include <cs/Core/Buffer.h>
 
-#include "fourcc.h"
-#include "toc.h"
-#include "util.h"
+using FourCC = std::array<char, 4>;
 
-////// Block /////////////////////////////////////////////////////////////////
+constexpr std::size_t SIZE_FOURCC = sizeof(FourCC);
 
-struct Block {
+FourCC getFourCC_nc(const cs::Buffer& buffer, const std::size_t offset);
 
-  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
+bool hasFourCC_nc(const cs::Buffer& buffer, const std::size_t offset,
+                  const FourCC& fourcc);
 
-  Block() noexcept
-  {
-  }
-};
-
-////// Main //////////////////////////////////////////////////////////////////
-
-int main(int argc, char **argv)
-{
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
-
-  const cs::Buffer buffer = file.readAll();
-
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
-
-  return EXIT_SUCCESS;
-}
+std::string_view toStringView(const FourCC& fourcc);

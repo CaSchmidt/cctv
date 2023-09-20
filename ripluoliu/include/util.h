@@ -29,41 +29,19 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#pragma once
 
-#include <iostream>
+#include <ctime>
 
-#include <cs/IO/File.h>
+#include <string>
 
-#include "fourcc.h"
-#include "toc.h"
-#include "util.h"
+#include <cs/Convert/Deserialize.h>
 
-////// Block /////////////////////////////////////////////////////////////////
-
-struct Block {
-
-  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
-
-  Block() noexcept
-  {
-  }
-};
-
-////// Main //////////////////////////////////////////////////////////////////
-
-int main(int argc, char **argv)
+template <typename T>
+inline T readInt(const cs::byte_t *data, const std::size_t offset,
+                 const std::size_t displacement = 0)
 {
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
-
-  const cs::Buffer buffer = file.readAll();
-
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
-
-  return EXIT_SUCCESS;
+  return cs::toIntegralFromLE<T>(data + offset + displacement * sizeof(T), sizeof(T));
 }
+
+std::string formatTime(const std::time_t t);

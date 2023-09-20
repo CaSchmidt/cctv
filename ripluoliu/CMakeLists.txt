@@ -12,7 +12,16 @@ add_subdirectory(../3rdparty/csUtil
 
 ### Project ##################################################################
 
+list(APPEND ripluoliu_HEADERS
+  include/fourcc.h
+  include/toc.h
+  include/util.h
+)
+
 list(APPEND ripluoliu_SOURCES
+  src/fourcc.cpp
+  src/toc.cpp
+  src/util.cpp
   src/main.cpp
 )
 
@@ -34,5 +43,6 @@ target_link_libraries(ripluoliu
 )
 
 target_sources(ripluoliu
+  PRIVATE ${ripluoliu_HEADERS}
   PRIVATE ${ripluoliu_SOURCES}
 )

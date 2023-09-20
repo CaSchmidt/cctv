@@ -29,41 +29,19 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#include <cs/Text/PrintFormat.h>
+#include <cs/Text/PrintUtil.h>
 
-#include <iostream>
-
-#include <cs/IO/File.h>
-
-#include "fourcc.h"
-#include "toc.h"
 #include "util.h"
 
-////// Block /////////////////////////////////////////////////////////////////
-
-struct Block {
-
-  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
-
-  Block() noexcept
-  {
-  }
-};
-
-////// Main //////////////////////////////////////////////////////////////////
-
-int main(int argc, char **argv)
+std::string formatTime(const std::time_t t)
 {
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
-
-  const cs::Buffer buffer = file.readAll();
-
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
-
-  return EXIT_SUCCESS;
+  const std::tm time = *std::gmtime(&t);
+  return cs::sprint("%%%-%%%",
+                    cs::decf(time.tm_year + 1900, 4, '0'),
+                    cs::decf(time.tm_mon + 1, 2, '0'),
+                    cs::decf(time.tm_mday, 2, '0'),
+                    cs::decf(time.tm_hour, 2, '0'),
+                    cs::decf(time.tm_min, 2, '0'),
+                    cs::decf(time.tm_sec, 2, '0'));
 }

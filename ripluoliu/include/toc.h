@@ -29,41 +29,36 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#pragma once
 
-#include <iostream>
+#include <array>
+#include <ostream>
 
-#include <cs/IO/File.h>
+#include <cs/Core/Buffer.h>
 
-#include "fourcc.h"
-#include "toc.h"
-#include "util.h"
+struct Toc {
+  using timestamp_t  = uint32_t;
+  using id_stream_t  = uint32_t;
+  using id_camera_t  = uint32_t;
+  using num_blocks_t = uint32_t;
+  using siz_stream_t = uint64_t;
 
-////// Block /////////////////////////////////////////////////////////////////
+  static constexpr std::size_t NUM_STREAMS = 32;
+  static constexpr std::size_t SIZE_TOC    = 0x2000;
 
-struct Block {
+  std::time_t tim_begin{};
+  std::time_t tim_end{};
+  std::array<id_stream_t, NUM_STREAMS> id_stream;
+  std::array<id_camera_t, NUM_STREAMS> id_camera;
+  std::array<num_blocks_t, NUM_STREAMS> num_blocks;
+  std::array<siz_stream_t, NUM_STREAMS> siz_stream;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_begin;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_end1;
+  std::array<std::time_t, NUM_STREAMS> tim_stream_end2;
 
-  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
+  Toc() noexcept;
 
-  Block() noexcept
-  {
-  }
+  void print(std::ostream *stream) const;
+
+  static Toc read(const cs::Buffer& buffer, const std::size_t offset = 0);
 };
-
-////// Main //////////////////////////////////////////////////////////////////
-
-int main(int argc, char **argv)
-{
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
-
-  const cs::Buffer buffer = file.readAll();
-
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
-
-  return EXIT_SUCCESS;
-}
