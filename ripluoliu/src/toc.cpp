@@ -69,8 +69,8 @@ void Toc::print(std::ostream *stream) const
 
 Toc Toc::read(const cs::Buffer& buffer, const std::size_t offset)
 {
-  constexpr FourCC TAG_BEGIN = FourCC{'l', 'u', 'o', ' '};
-  constexpr FourCC TAG_END   = FourCC{' ', 'o', 'u', 'l'};
+  constexpr FourCC TAG_BEGIN{'l', 'u', 'o', ' '};
+  constexpr FourCC TAG_END{' ', 'o', 'u', 'l'};
 
   constexpr std::size_t OFFS_TIME_BEGIN        = 0x4;
   constexpr std::size_t OFFS_TIME_END          = 0x8;
@@ -82,11 +82,17 @@ Toc Toc::read(const cs::Buffer& buffer, const std::size_t offset)
   constexpr std::size_t OFFS_NUM_BLOCKS        = 0x38C;
   constexpr std::size_t OFFS_SIZ_STREAM        = 0x40C;
 
+  // Sanity Check ////////////////////////////////////////////////////////////
+
   if( offset + SIZE_TOC > buffer.size() ) {
     return Toc{};
   }
 
-  if( !hasFourCC_nc(buffer, offset, TAG_BEGIN) || !hasFourCC_nc(buffer, offset + SIZE_TOC - SIZE_FOURCC, TAG_END) ) {
+  if( !hasFourCC_nc(buffer, offset, TAG_BEGIN) ) {
+    return Toc{};
+  }
+
+  if( !hasFourCC_nc(buffer, offset + SIZE_TOC - SIZE_FOURCC, TAG_END) ) {
     return Toc{};
   }
 
