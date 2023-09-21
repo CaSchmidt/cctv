@@ -13,12 +13,14 @@ add_subdirectory(../3rdparty/csUtil
 ### Project ##################################################################
 
 list(APPEND ripluoliu_HEADERS
+  include/block.h
   include/fourcc.h
   include/toc.h
   include/util.h
 )
 
 list(APPEND ripluoliu_SOURCES
+  src/block.cpp
   src/fourcc.cpp
   src/toc.cpp
   src/util.cpp

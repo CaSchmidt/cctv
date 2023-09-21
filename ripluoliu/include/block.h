@@ -29,37 +29,41 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-#include <cstdio>
-#include <cstdlib>
+#pragma once
 
-#include <iostream>
+#include <ctime>
 
-#include <cs/IO/File.h>
+#include <ostream>
 
-#include "block.h"
 #include "fourcc.h"
-#include "toc.h"
-#include "util.h"
 
-////// Main //////////////////////////////////////////////////////////////////
+struct Block {
+  using id_stream_t  = uint32_t;
+  using vid_size_t   = uint32_t;
+  using vid_fps_t    = uint32_t;
+  using aud_rate_t   = uint32_t;
+  using id_camera_t  = uint32_t;
+  using block_size_t = uint32_t;
+  using timestamp_t  = uint32_t;
 
-int main(int argc, char **argv)
-{
-  cs::File file;
-  if( !file.open(argv[1]) ) {
-    return EXIT_FAILURE;
-  }
+  static constexpr std::size_t SIZE_BLOCK_HEADER = 0x80;
 
-  const cs::Buffer buffer = file.readAll();
+  std::size_t offset{};
+  id_stream_t id_stream{};
+  vid_size_t vid_width{};
+  vid_size_t vid_height{};
+  vid_fps_t vid_fps{};
+  aud_rate_t aud_rate{};
+  FourCC fourcc{};
+  id_camera_t id_camera{};
+  std::size_t block_size{};
+  std::time_t timestamp;
 
-  const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
+  Block() noexcept;
 
-  const Block block1 = Block::read(buffer, Toc::SIZE_TOC);
-  block1.print(&std::cout);
+  std::size_t next() const;
 
-  const Block block2 = Block::read(buffer, block1.next());
-  block2.print(&std::cout);
+  void print(std::ostream *stream) const;
 
-  return EXIT_SUCCESS;
-}
+  static Block read(const cs::Buffer& buffer, const std::size_t offset = 0);
+};
