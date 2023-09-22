@@ -61,9 +61,16 @@ struct Block {
 
   Block() noexcept;
 
+  bool isValid() const;
+
   std::size_t next() const;
 
   void print(std::ostream *stream) const;
 
   static Block read(const cs::Buffer& buffer, const std::size_t offset = 0);
+
+private:
+  bool _is_valid{false};
+
+  Block(const cs::Buffer& buffer, const std::size_t offsBuffer) noexcept;
 };

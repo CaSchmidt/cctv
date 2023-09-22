@@ -55,6 +55,11 @@ Block::Block() noexcept
 {
 }
 
+bool Block::isValid() const
+{
+  return _is_valid;
+}
+
 std::size_t Block::next() const
 {
   return offset + SIZE_BLOCK_HEADER + block_size;
@@ -79,9 +84,6 @@ void Block::print(std::ostream *stream) const
 
 Block Block::read(const cs::Buffer& buffer, const std::size_t offset)
 {
-  constexpr FourCC TAG_BEGIN{'l', 'i', 'u', ' '};
-  constexpr FourCC TAG_END{' ', 'u', 'i', 'l'};
-
   constexpr std::size_t OFFS_ID_STREAM  = 0x04;
   constexpr std::size_t OFFS_VID_WIDTH  = 0x08;
   constexpr std::size_t OFFS_VID_HEIGHT = 0x0C;
@@ -92,28 +94,16 @@ Block Block::read(const cs::Buffer& buffer, const std::size_t offset)
   constexpr std::size_t OFFS_BLOCK_SIZE = 0x3C;
   constexpr std::size_t OFFS_TIMESTAMP  = 0x48;
 
-  // Sanity check ////////////////////////////////////////////////////////////
+  // Result //////////////////////////////////////////////////////////////////
 
-  if( offset + SIZE_BLOCK_HEADER > buffer.size() ) {
-    return Block{};
-  }
-
-  if( !hasFourCC_nc(buffer, offset, TAG_BEGIN) ) {
-    return Block{};
-  }
-
-  if( !hasFourCC_nc(buffer, offset + SIZE_BLOCK_HEADER - SIZE_FOURCC, TAG_END) ) {
-    return Block{};
+  Block block(buffer, offset);
+  if( !block.isValid() ) {
+    return Block();
   }
 
   // Helper //////////////////////////////////////////////////////////////////
 
   const cs::byte_t *data = buffer.data() + offset;
-
-  // Result //////////////////////////////////////////////////////////////////
-
-  Block block{};
-  block.offset = offset;
 
   // Read Header /////////////////////////////////////////////////////////////
 
@@ -130,8 +120,31 @@ Block Block::read(const cs::Buffer& buffer, const std::size_t offset)
   // Final Sanity Check //////////////////////////////////////////////////////
 
   if( block.next() > buffer.size() ) {
-    return Block{};
+    return Block();
   }
 
   return block;
+}
+
+////// private ///////////////////////////////////////////////////////////////
+
+Block::Block(const cs::Buffer& buffer, const std::size_t offsBuffer) noexcept
+{
+  constexpr FourCC TAG_BEGIN{'l', 'i', 'u', ' '};
+  constexpr FourCC TAG_END{' ', 'u', 'i', 'l'};
+
+  if( offsBuffer + SIZE_BLOCK_HEADER > buffer.size() ) {
+    return;
+  }
+
+  if( !hasFourCC_nc(buffer, offsBuffer, TAG_BEGIN) ) {
+    return;
+  }
+
+  if( !hasFourCC_nc(buffer, offsBuffer + SIZE_BLOCK_HEADER - SIZE_FOURCC, TAG_END) ) {
+    return;
+  }
+
+  offset    = offsBuffer;
+  _is_valid = true;
 }
