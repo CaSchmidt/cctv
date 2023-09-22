@@ -32,6 +32,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <filesystem>
 #include <iostream>
 
 #include <cs/IO/File.h>
@@ -40,6 +41,27 @@
 #include "fourcc.h"
 #include "toc.h"
 #include "util.h"
+
+////// Operations ////////////////////////////////////////////////////////////
+
+void extractStream(const std::filesystem::path& output, const cs::Buffer& buffer,
+                   const Block::id_stream_t id_stream, const FourCC& fourcc)
+{
+  cs::File file;
+  if( !file.open(output, cs::FileOpenFlag::Write | cs::FileOpenFlag::Truncate) ) {
+    return;
+  }
+
+  for( Block block = Block::read(buffer, Toc::SIZE_TOC);
+       block.isValid();
+       block = Block::read(buffer, block.next()) ) {
+    if( block.id_stream != id_stream || block.fourcc != fourcc ) {
+      continue;
+    }
+
+    file.write(buffer.data() + block.data(), block.block_size);
+  }
+}
 
 ////// Main //////////////////////////////////////////////////////////////////
 
@@ -53,13 +75,15 @@ int main(int argc, char **argv)
   const cs::Buffer buffer = file.readAll();
 
   const Toc toc = Toc::read(buffer);
-  toc.print(&std::cout);
+  toc.print();
 
   const Block block1 = Block::read(buffer, Toc::SIZE_TOC);
-  block1.print(&std::cout);
+  block1.print();
 
   const Block block2 = Block::read(buffer, block1.next());
-  block2.print(&std::cout);
+  block2.print();
+
+  extractStream("output.h265", buffer, toc.id_stream[0], FourCC{'H', '2', '6', '5'});
 
   return EXIT_SUCCESS;
 }
