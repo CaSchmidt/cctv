@@ -29,6 +29,8 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
+#include <iostream>
+
 #include <cs/Text/Print.h>
 #include <cs/Text/PrintFormat.h>
 
@@ -63,6 +65,11 @@ void Toc::print(std::ostream *stream) const
     cs::println(stream, "tim_stream_end2  = %", formatTime(tim_stream_end2[i]));
     cs::println(stream, "");
   }
+}
+
+void Toc::print() const
+{
+  print(&std::cout);
 }
 
 ////// public static /////////////////////////////////////////////////////////

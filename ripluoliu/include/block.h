@@ -63,9 +63,11 @@ struct Block {
 
   bool isValid() const;
 
+  std::size_t data() const;
   std::size_t next() const;
 
   void print(std::ostream *stream) const;
+  void print() const;
 
   static Block read(const cs::Buffer& buffer, const std::size_t offset = 0);
 

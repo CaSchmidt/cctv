@@ -59,6 +59,7 @@ struct Toc {
   Toc() noexcept;
 
   void print(std::ostream *stream) const;
+  void print() const;
 
   static Toc read(const cs::Buffer& buffer, const std::size_t offset = 0);
 };

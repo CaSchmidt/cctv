@@ -60,6 +60,11 @@ bool Block::isValid() const
   return _is_valid;
 }
 
+std::size_t Block::data() const
+{
+  return offset + SIZE_BLOCK_HEADER;
+}
+
 std::size_t Block::next() const
 {
   return offset + SIZE_BLOCK_HEADER + block_size;
@@ -78,6 +83,11 @@ void Block::print(std::ostream *stream) const
   cs::println(stream, "block_size = %", block_size);
   cs::println(stream, "timestamp  = %", formatTime(timestamp));
   cs::println(stream, "");
+}
+
+void Block::print() const
+{
+  print(&std::cout);
 }
 
 ////// public static /////////////////////////////////////////////////////////
