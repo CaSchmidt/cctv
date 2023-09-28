@@ -29,6 +29,10 @@
 ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
+#include <algorithm>
+
+#include <cs/Core/Range.h>
+
 #include "fourcc.h"
 
 FourCC getFourCC_nc(const cs::Buffer& buffer, const std::size_t offset)
@@ -44,6 +48,30 @@ bool hasFourCC_nc(const cs::Buffer& buffer, const std::size_t offset,
                   const FourCC& fourcc)
 {
   return std::equal(fourcc.begin(), fourcc.end(), buffer.data() + offset);
+}
+
+bool isEmpty(const FourCC& fourcc)
+{
+  constexpr auto is_empty = [](const char& c) -> bool {
+    return c == '\0';
+  };
+  return std::all_of(fourcc.begin(), fourcc.end(), is_empty);
+}
+
+FourCC makeFourCC(const char *str)
+{
+  constexpr std::size_t FOUR = 4;
+  constexpr char null        = '\0';
+
+  FourCC fourcc{null, null, null, null};
+  if( cs::strlen(str) == FOUR ) {
+    fourcc[0] = str[0];
+    fourcc[1] = str[1];
+    fourcc[2] = str[2];
+    fourcc[3] = str[3];
+  }
+
+  return fourcc;
 }
 
 std::string_view toStringView(const FourCC& fourcc)

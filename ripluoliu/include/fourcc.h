@@ -45,4 +45,8 @@ FourCC getFourCC_nc(const cs::Buffer& buffer, const std::size_t offset);
 bool hasFourCC_nc(const cs::Buffer& buffer, const std::size_t offset,
                   const FourCC& fourcc);
 
+bool isEmpty(const FourCC& fourcc);
+
+FourCC makeFourCC(const char *str);
+
 std::string_view toStringView(const FourCC& fourcc);
