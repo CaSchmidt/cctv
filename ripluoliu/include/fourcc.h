@@ -49,4 +49,6 @@ bool isEmpty(const FourCC& fourcc);
 
 FourCC makeFourCC(const char *str);
 
+std::string toString(const FourCC& fourcc);
+
 std::string_view toStringView(const FourCC& fourcc);

@@ -55,7 +55,7 @@ bool isEmpty(const FourCC& fourcc)
   constexpr auto is_empty = [](const char& c) -> bool {
     return c == '\0';
   };
-  return std::all_of(fourcc.begin(), fourcc.end(), is_empty);
+  return std::any_of(fourcc.begin(), fourcc.end(), is_empty);
 }
 
 FourCC makeFourCC(const char *str)
@@ -74,7 +74,12 @@ FourCC makeFourCC(const char *str)
   return fourcc;
 }
 
+std::string toString(const FourCC& fourcc)
+{
+  return std::string(fourcc.data(), fourcc.size());
+}
+
 std::string_view toStringView(const FourCC& fourcc)
 {
-  return std::string_view{fourcc.data(), fourcc.size()};
+  return std::string_view(fourcc.data(), fourcc.size());
 }
