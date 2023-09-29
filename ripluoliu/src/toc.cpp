@@ -92,15 +92,15 @@ Toc Toc::read(const cs::Buffer& buffer, const std::size_t offset)
   // Sanity Check ////////////////////////////////////////////////////////////
 
   if( offset + SIZE_TOC > buffer.size() ) {
-    return Toc{};
+    return Toc();
   }
 
   if( !hasFourCC_nc(buffer, offset, TAG_BEGIN) ) {
-    return Toc{};
+    return Toc();
   }
 
   if( !hasFourCC_nc(buffer, offset + SIZE_TOC - SIZE_FOURCC, TAG_END) ) {
-    return Toc{};
+    return Toc();
   }
 
   // Helper ////////////////////////////////////////////////////////////////
