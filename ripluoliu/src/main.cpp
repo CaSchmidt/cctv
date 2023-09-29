@@ -36,7 +36,9 @@
 #include <iostream>
 
 #include <cs/IO/File.h>
-#include <cs/Text/StringAlgorithm.h>
+#include <cs/Text/PrintFormat.h>
+#include <cs/Text/PrintUtil.h>
+#include <cs/Text/StringUtil.h>
 
 #include "block.h"
 #include "fourcc.h"
@@ -64,6 +66,30 @@ void extractStream(const std::filesystem::path& output, const cs::Buffer& buffer
   }
 }
 
+void extractAllStreams(const std::filesystem::path& input,
+                       const cs::Buffer& buffer,
+                       const FourCC& fourcc)
+{
+  if( input.empty() || buffer.empty() || isEmpty(fourcc) ) {
+    return;
+  }
+
+  const Toc toc = Toc::read(buffer);
+
+  for( std::size_t i = 0; i < Toc::NUM_STREAMS; i++ ) {
+    const Toc::id_stream_t id = toc.id_stream[i];
+    if( id == 0 ) {
+      continue;
+    }
+
+    const std::string output = cs::sprint("%-0x%.%",
+                                          input.stem().string(),
+                                          cs::hexf(id, true),
+                                          cs::toLower(toString(fourcc)));
+    extractStream(output, buffer, id, fourcc);
+  }
+}
+
 ////// Main //////////////////////////////////////////////////////////////////
 
 const char *arg_filename = NULL;
@@ -71,8 +97,12 @@ FourCC arg_fourcc;
 
 bool parseArgs(const int argc, char **argv)
 {
+  // (1) Initialize arguments ////////////////////////////////////////////////
+
   arg_filename = NULL;
   arg_fourcc.fill('\0');
+
+  // (2) Scan for optional arguments beginning with '-' //////////////////////
 
   int opt = 1;
   for( ; opt < argc; opt++ ) {
@@ -88,19 +118,24 @@ bool parseArgs(const int argc, char **argv)
         fprintf(stderr, "ERROR: Invalid FourCC \"%s\"!\n", opt_fourcc);
         return false;
       }
+
     } else {
       fprintf(stderr, "ERROR: Invalid option \"%s\"!\n", argv[opt]);
       return false;
     }
   }
 
-  if( opt >= argc ) {
+  // (3) Do non-optional arguments exist? ////////////////////////////////////
+
+  if( opt >= argc ) { // all arguments consumed!
     return false;
   }
 
-  arg_filename = argv[opt];
+  // (4) Read arguments //////////////////////////////////////////////////////
 
-  return true;
+  arg_filename = argv[opt++];
+
+  return opt == argc;
 }
 
 void usage(const char *prog)
@@ -128,8 +163,14 @@ int main(int argc, char **argv)
 
   const cs::Buffer buffer = file.readAll();
 
+  // (3) Work ////////////////////////////////////////////////////////////////
+
   const Toc toc = Toc::read(buffer);
   toc.print();
+
+  if( !isEmpty(arg_fourcc) ) {
+    extractAllStreams(arg_filename, buffer, arg_fourcc);
+  }
 
   return EXIT_SUCCESS;
 }
