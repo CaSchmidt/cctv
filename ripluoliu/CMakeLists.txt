@@ -4,9 +4,7 @@ project(cctv-dev)
 
 ### Dependencies #############################################################
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(../3rdparty/csUtil
+add_subdirectory(../3rdparty/csUtil/csUtil
   ${CMAKE_CURRENT_BINARY_DIR}/csUtil
 )
 
